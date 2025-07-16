@@ -1,0 +1,151 @@
+{% extends 'tracker/base.html' %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">My Applications</h2>
+            <button type='button' class='btn btn-primary' onclick='loadModal("{% url "application_add" %}")'>Add Application</button>
+        </div>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card bg-dark text-white mb-4">
+            <div class="card-header">Status Overview</div>
+            <div class="card-body">
+                <canvas id="statusBarChart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-dark text-white mb-4">
+            <div class="card-header">Summary</div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item bg-dark text-white d-flex justify-content-between align-items-center">Total <span class="badge badge-primary">{{ status_counts.total }}</span></li>
+                    <li class="list-group-item bg-dark text-white d-flex justify-content-between align-items-center">Applied <span class="badge badge-info">{{ status_counts.applied }}</span></li>
+                    <li class="list-group-item bg-dark text-white d-flex justify-content-between align-items-center">Interview <span class="badge badge-warning">{{ status_counts.interview }}</span></li>
+                    <li class="list-group-item bg-dark text-white d-flex justify-content-between align-items-center">Offer <span class="badge badge-success">{{ status_counts.offer }}</span></li>
+                    <li class="list-group-item bg-dark text-white d-flex justify-content-between align-items-center">Accepted <span class="badge badge-secondary">{{ status_counts.accepted }}</span></li>
+                    <li class="list-group-item bg-dark text-white d-flex justify-content-between align-items-center">Rejected <span class="badge badge-danger">{{ status_counts.rejected }}</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <form class="form-inline" method="get" id="searchFilterForm">
+        <input name="search" class="form-control mr-2" type="search" placeholder="Search" aria-label="Search" style="width: 200px;" value="{{ search_query }}">
+        <select name="status" class="form-control" style="width: 150px;" onchange="document.getElementById('searchFilterForm').submit();">
+            <option value="">All Statuses</option>
+            <option value="applied" {% if status_filter == 'applied' %}selected{% endif %}>Applied</option>
+            <option value="interview" {% if status_filter == 'interview' %}selected{% endif %}>Interview</option>
+            <option value="offer" {% if status_filter == 'offer' %}selected{% endif %}>Offer</option>
+            <option value="accepted" {% if status_filter == 'accepted' %}selected{% endif %}>Accepted</option>
+            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+    </form>
+</div>
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Logo</th>
+            <th>Company</th>
+            <th>Position</th>
+            <th>Date Applied</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for app in applications %}
+        <tr>
+            <td>
+                {% if app.company_logo %}
+                    <img src="{{ app.company_logo }}" alt="Logo" style="height:32px;max-width:48px;object-fit:contain;">
+                {% else %}
+                    <span class="text-muted">N/A</span>
+                {% endif %}
+            </td>
+            <td>{{ app.company }}</td>
+            <td>{{ app.position }}</td>
+            <td>{{ app.date_applied }}</td>
+            <td>
+                {% if app.status == 'applied' %}
+                    <span class="badge badge-info">Applied</span>
+                {% elif app.status == 'interview' %}
+                    <span class="badge badge-warning">Interview</span>
+                {% elif app.status == 'offer' %}
+                    <span class="badge badge-success">Offer</span>
+                {% elif app.status == 'accepted' %}
+                    <span class="badge badge-secondary">Accepted</span>
+                {% elif app.status == 'rejected' %}
+                    <span class="badge badge-danger">Rejected</span>
+                {% else %}
+                    <span class="badge badge-light">{{ app.get_status_display }}</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if app.job_link %}
+                    <a href="{{ app.job_link }}" target="_blank" class="btn btn-sm btn-outline-primary mr-1">Job Link</a>
+                {% endif %}
+                <button type='button' class='btn btn-sm btn-info' onclick='loadModal("{% url "application_edit" app.pk %}")'>Edit</button>
+                <button type='button' class='btn btn-sm btn-danger' onclick='loadModal("{% url "application_delete" app.pk %}")'>Delete</button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No applications yet.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+const ctx = document.getElementById('statusBarChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Applied', 'Interview', 'Offer', 'Accepted', 'Rejected'],
+        datasets: [{
+            label: 'Applications',
+            data: [
+                {{ status_counts.applied|default:0 }},
+                {{ status_counts.interview|default:0 }},
+                {{ status_counts.offer|default:0 }},
+                {{ status_counts.accepted|default:0 }},
+                {{ status_counts.rejected|default:0 }}
+            ],
+            backgroundColor: [
+                '#6f42c1', // Applied
+                '#fd7e14', // Interview
+                '#28a745', // Offer
+                '#343a40', // Accepted
+                '#dc3545'  // Rejected
+            ],
+            borderRadius: 8,
+            barPercentage: 0.7
+        }]
+    },
+    options: {
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            x: {
+                grid: { color: '#23283a' },
+                ticks: { color: '#b0b8c1' }
+            },
+            y: {
+                grid: { color: '#23283a' },
+                ticks: { color: '#b0b8c1' }
+            }
+        },
+        animation: {
+            duration: 1200,
+            easing: 'easeOutBounce'
+        },
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+</script>
+{% endblock %} 

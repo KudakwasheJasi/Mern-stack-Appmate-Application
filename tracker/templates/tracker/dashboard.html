@@ -1,0 +1,242 @@
+{% extends 'tracker/base.html' %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="stat-title">Total Applications</div>
+                <div class="stat-value" id="totalCount">{{ status_counts.total }}</div>
+            </div>
+            <div class="stat-icon bg-primary"><i class="fas fa-list"></i></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="stat-title">Applied</div>
+                <div class="stat-value" id="appliedCount">{{ status_counts.applied }}</div>
+            </div>
+            <div class="stat-icon" style="background:#6f42c1;"><i class="fas fa-paper-plane"></i></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="stat-title">Interview</div>
+                <div class="stat-value" id="interviewCount">{{ status_counts.interview }}</div>
+            </div>
+            <div class="stat-icon" style="background:#fd7e14;"><i class="fas fa-comments"></i></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="stat-title">Offer</div>
+                <div class="stat-value" id="offerCount">{{ status_counts.offer }}</div>
+            </div>
+            <div class="stat-icon" style="background:#28a745;"><i class="fas fa-handshake"></i></div>
+        </div>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="stat-title">Accepted</div>
+                <div class="stat-value" id="acceptedCount">{{ status_counts.accepted }}</div>
+            </div>
+            <div class="stat-icon" style="background:#343a40;"><i class="fas fa-check-circle"></i></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="stat-title">Rejected</div>
+                <div class="stat-value" id="rejectedCount">{{ status_counts.rejected }}</div>
+            </div>
+            <div class="stat-icon" style="background:#dc3545;"><i class="fas fa-times-circle"></i></div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="stat-card" style="height: 100%;">
+            <div style="width:100%;">
+                <canvas id="statusBarChart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-6 offset-md-3">
+        <div class="stat-card">
+            <div style="width:100%;">
+                <canvas id="statusPieChart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// Animated icon waving effect
+function animateWaveIcon(className) {
+    const icons = document.querySelectorAll(className);
+    let duration = 1800;
+    function wave(ts) {
+        let t = (ts % duration) / duration;
+        let scale = 1 + 0.12 * Math.sin(2 * Math.PI * t);
+        icons.forEach(icon => {
+            icon.style.transform = `scale(${scale})`;
+        });
+        requestAnimationFrame(wave);
+    }
+    requestAnimationFrame(wave);
+}
+animateWaveIcon('.stat-icon');
+
+// Bar chart
+const ctx = document.getElementById('statusBarChart').getContext('2d');
+const statusBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Applied', 'Interview', 'Offer', 'Accepted', 'Rejected'],
+        datasets: [{
+            label: 'Applications',
+            data: [
+                {{ status_counts.applied|default:0 }},
+                {{ status_counts.interview|default:0 }},
+                {{ status_counts.offer|default:0 }},
+                {{ status_counts.accepted|default:0 }},
+                {{ status_counts.rejected|default:0 }}
+            ],
+            backgroundColor: [
+                '#6f42c1', // Applied
+                '#fd7e14', // Interview
+                '#28a745', // Offer
+                '#343a40', // Accepted
+                '#dc3545'  // Rejected
+            ],
+            borderRadius: 8,
+            barPercentage: 0.7
+        }]
+    },
+    options: {
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            x: {
+                grid: { color: '#23283a' },
+                ticks: { color: '#b0b8c1' }
+            },
+            y: {
+                grid: { color: '#23283a' },
+                ticks: { color: '#b0b8c1' }
+            }
+        },
+        animation: {
+            duration: 1200,
+            easing: 'easeOutBounce'
+        },
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// Pie chart for application statuses
+const pieCtx = document.getElementById('statusPieChart').getContext('2d');
+new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+        labels: ['Applied', 'Interview', 'Offer', 'Accepted', 'Rejected'],
+        datasets: [{
+            data: [
+                {{ status_counts.applied|default:0 }},
+                {{ status_counts.interview|default:0 }},
+                {{ status_counts.offer|default:0 }},
+                {{ status_counts.accepted|default:0 }},
+                {{ status_counts.rejected|default:0 }}
+            ],
+            backgroundColor: [
+                '#6f42c1', // Applied
+                '#fd7e14', // Interview
+                '#28a745', // Offer
+                '#343a40', // Accepted
+                '#dc3545'  // Rejected
+            ]
+        }]
+    },
+    options: {
+        plugins: {
+            legend: { display: true, position: 'bottom', labels: { color: '#b0b8c1' } }
+        },
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+</script>
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <button type='button' class='btn btn-primary' onclick='loadModal("{% url "application_add" %}")'>Add Application</button>
+    <form class="form-inline" method="get" id="searchFilterForm">
+        <input name="search" class="form-control mr-2" type="search" placeholder="Search" aria-label="Search" style="width: 200px;" value="{{ search_query }}">
+        <select name="status" class="form-control" style="width: 150px;" onchange="document.getElementById('searchFilterForm').submit();">
+            <option value="">All Statuses</option>
+            <option value="applied" {% if status_filter == 'applied' %}selected{% endif %}>Applied</option>
+            <option value="interview" {% if status_filter == 'interview' %}selected{% endif %}>Interview</option>
+            <option value="offer" {% if status_filter == 'offer' %}selected{% endif %}>Offer</option>
+            <option value="accepted" {% if status_filter == 'accepted' %}selected{% endif %}>Accepted</option>
+            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+    </form>
+</div>
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Logo</th>
+            <th>Company</th>
+            <th>Position</th>
+            <th>Date Applied</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for app in applications %}
+        <tr>
+            <td>
+                {% if app.company_logo %}
+                    <img src="{{ app.company_logo }}" alt="Logo" style="height:32px;max-width:48px;object-fit:contain;">
+                {% else %}
+                    <span class="text-muted">N/A</span>
+                {% endif %}
+            </td>
+            <td>{{ app.company }}</td>
+            <td>{{ app.position }}</td>
+            <td>{{ app.date_applied }}</td>
+            <td>
+                {% if app.status == 'applied' %}
+                    <span class="badge badge-info">Applied</span>
+                {% elif app.status == 'interview' %}
+                    <span class="badge badge-warning">Interview</span>
+                {% elif app.status == 'offer' %}
+                    <span class="badge badge-success">Offer</span>
+                {% elif app.status == 'accepted' %}
+                    <span class="badge badge-secondary">Accepted</span>
+                {% elif app.status == 'rejected' %}
+                    <span class="badge badge-danger">Rejected</span>
+                {% else %}
+                    <span class="badge badge-light">{{ app.get_status_display }}</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if app.job_link %}
+                    <a href="{{ app.job_link }}" target="_blank" class="btn btn-sm btn-outline-primary mr-1">Job Link</a>
+                {% endif %}
+                <button type='button' class='btn btn-sm btn-info' onclick='loadModal("{% url "application_edit" app.pk %}")'>Edit</button>
+                <button type='button' class='btn btn-sm btn-danger' onclick='loadModal("{% url "application_delete" app.pk %}")'>Delete</button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No applications yet.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %} 

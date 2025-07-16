@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApplyMate</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@4.6.2/dist/darkly/bootstrap.min.css">
+    <style>
+        body { background: #181c24; }
+        .sidebar {
+            min-height: 100vh;
+            background: #11131a;
+            color: #fff;
+            padding-top: 2rem;
+        }
+        .sidebar .sidebar-logo {
+            font-size: 1.5rem;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar .sidebar-logo i {
+            font-size: 1.6rem;
+            margin-right: 0.5rem;
+        }
+        .sidebar .nav-link {
+            color: #b0b8c1;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        .sidebar .nav-link.active, .sidebar .nav-link:hover {
+            background: #212431;
+            color: #fff;
+            border-radius: 8px;
+        }
+        .topbar {
+            background: #181c24;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .search-bar {
+            background: #23283a;
+            border: none;
+            border-radius: 20px;
+            color: #fff;
+            padding: 0.5rem 1.5rem;
+            width: 350px;
+        }
+        .main-content {
+            padding: 2rem 2rem 2rem 0;
+            margin-left: 24px;
+        }
+        .stat-card {
+            background: #23283a;
+            border-radius: 12px;
+            color: #fff;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .stat-icon {
+            font-size: 1.4rem;
+            border-radius: 50%;
+            padding: 0.5rem;
+            color: #fff;
+        }
+        .stat-title { font-size: 1rem; color: #b0b8c1; }
+        .stat-value { font-size: 1.5rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="d-flex">
+    <nav id="sidebar" class="sidebar d-flex flex-column p-3">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 class="sidebar-logo"><i class="fas fa-briefcase"></i> ApplyMate</h3>
+            <button id="themeToggle" class="btn btn-sm btn-outline-light ml-2" data-toggle="tooltip" title="Toggle theme"><i class="fas fa-adjust"></i></button>
+        </div>
+        <button class="btn btn-success btn-block mb-3" onclick="loadModal('{% url 'application_add' %}')" data-toggle="tooltip" title="Add new application">
+            <i class="fas fa-plus mr-1"></i> New Application
+        </button>
+        <div class="mb-2 text-uppercase text-muted small d-flex align-items-center" style="letter-spacing:1px;">
+            Main
+            <button class="btn btn-link btn-sm ml-auto p-0" data-toggle="collapse" data-target="#mainSection" aria-expanded="true" aria-controls="mainSection"><i class="fas fa-chevron-down"></i></button>
+        </div>
+        <div id="mainSection" class="collapse show">
+            <a href="{% url 'dashboard' %}" class="nav-link{% if request.path == '/' %} active{% endif %}" data-toggle="tooltip" title="Dashboard"><i class="fas fa-tachometer-alt mr-2"></i> Dashboard</a>
+            <a href="{% url 'applications_list' %}" class="nav-link{% if request.path == '/applications/' %} active{% endif %}" data-toggle="tooltip" title="Applications"><i class="fas fa-tasks mr-2"></i> Applications</a>
+            <a href="{% url 'reminders_list' %}" class="nav-link{% if request.path == '/reminders/' %} active{% endif %}" data-toggle="tooltip" title="Reminders"><i class="fas fa-bell mr-2"></i> Reminders{% if unread_reminders_count and unread_reminders_count > 0 %}<span class="badge badge-danger ml-2">{{ unread_reminders_count }}</span>{% endif %}</a>
+            <a href="{% url 'reports' %}" class="nav-link{% if request.path == '/reports/' %} active{% endif %}" data-toggle="tooltip" title="Reports"><i class="fas fa-chart-bar mr-2"></i> Reports</a>
+        </div>
+        <div class="mb-2 mt-4 text-uppercase text-muted small d-flex align-items-center" style="letter-spacing:1px;">
+            Account
+            <button class="btn btn-link btn-sm ml-auto p-0" data-toggle="collapse" data-target="#accountSection" aria-expanded="true" aria-controls="accountSection"><i class="fas fa-chevron-down"></i></button>
+        </div>
+        <div id="accountSection" class="collapse show">
+            <a href="{% url 'profile' %}" class="nav-link{% if request.path == '/profile/' %} active{% endif %}" data-toggle="tooltip" title="Profile"><i class="fas fa-user mr-2"></i> Profile</a>
+            <a href="{% url 'settings' %}" class="nav-link{% if request.path == '/settings/' %} active{% endif %}" data-toggle="tooltip" title="Settings"><i class="fas fa-cog mr-2"></i> Settings</a>
+            <a href="#" class="nav-link" data-toggle="tooltip" title="Help"><i class="fas fa-question-circle mr-2"></i> Help</a>
+        </div>
+        <div class="mt-auto pt-4">
+            <div class="d-flex align-items-center">
+                {% if user.profile.profile_pic %}
+                    <img src="{{ user.profile.profile_pic.url }}" class="rounded-circle mr-2" style="width:32px;height:32px;object-fit:cover;">
+                {% else %}
+                    <span class="rounded-circle bg-secondary d-inline-block text-center mr-2" style="width:32px;height:32px;line-height:32px;font-size:1.1rem;">
+                        {{ user.first_name|default:user.username|first|upper }}
+                    </span>
+                {% endif %}
+                <div>
+                    <div class="font-weight-bold">{{ user.get_full_name|default:user.username }}</div>
+                    <small class="text-muted">{{ user.email }}</small>
+                </div>
+            </div>
+            <a href="/accounts/logout/" class="nav-link mt-3"><i class="fas fa-sign-out-alt mr-2"></i> Logout</a>
+            <button id="sidebarMiniToggle" class="btn btn-link btn-sm mt-2" data-toggle="tooltip" title="Collapse sidebar"><i class="fas fa-angle-double-left"></i></button>
+        </div>
+    </nav>
+    <div class="flex-grow-1">
+        <div class="topbar">
+            <input type="text" class="search-bar" placeholder="Search...">
+            <div class="d-flex align-items-center">
+                <div class="dropdown mr-3">
+                    <button id="notifBell" class="btn btn-link text-light position-relative" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-bell fa-lg"></i>
+                        <span id="notifCount" class="badge badge-danger position-absolute" style="top:0;right:0;display:none;">0</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="notifBell" style="min-width: 320px;">
+                        <div id="notifList" style="max-height: 300px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+                <span class="badge badge-primary p-2"><i class="fas fa-user"></i></span>
+            </div>
+        </div>
+        <div class="main-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+<!-- Sidebar Expand Button (outside flex container) -->
+<button id="sidebarExpandBtn" class="btn btn-primary position-fixed" style="top: 18px; left: 18px; z-index: 1050; display: none;"><i class="fas fa-bars"></i></button>
+<div id="modal-container"></div>
+<div aria-live="polite" aria-atomic="true" style="position: fixed; top: 1rem; right: 1rem; min-width: 300px; z-index: 1080;">
+  <div id="toast-container"></div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+});
+// Theme toggle
+$('#themeToggle').on('click', function() {
+    if (document.body.classList.contains('light-theme')) {
+        document.body.classList.remove('light-theme');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        document.body.classList.add('light-theme');
+        localStorage.setItem('theme', 'light');
+    }
+});
+if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-theme');
+}
+// Show expand button only in mini mode
+function updateSidebarExpandBtn() {
+    if ($('#sidebar').hasClass('sidebar-mini')) {
+        $('#sidebarExpandBtn').show();
+    } else {
+        $('#sidebarExpandBtn').hide();
+    }
+}
+// Sidebar mini mode
+$('#sidebarMiniToggle').on('click', function() {
+    $('#sidebar').toggleClass('sidebar-mini');
+    // Close all collapsible sections when entering mini mode
+    if ($('#sidebar').hasClass('sidebar-mini')) {
+        $('#mainSection').collapse('hide');
+        $('#accountSection').collapse('hide');
+    } else {
+        $('#mainSection').collapse('show');
+        $('#accountSection').collapse('show');
+    }
+    updateSidebarExpandBtn();
+});
+$('#sidebarExpandBtn').on('click', function() {
+    $('#sidebar').removeClass('sidebar-mini');
+    $('#mainSection').collapse('show');
+    $('#accountSection').collapse('show');
+    updateSidebarExpandBtn();
+});
+// Modal AJAX loader
+function loadModal(url) {
+    $.get(url, function(data) {
+        $("#modal-container").html(data);
+        $("#mainModal").modal("show");
+    });
+}
+function showToast(message, type) {
+    var toastHtml = `<div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="3000">
+        <div class="toast-header bg-` + (type === 'success' ? 'success' : 'danger') + ` text-white">
+            <strong class="mr-auto">ApplyMate</strong>
+            <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="toast-body">` + message + `</div>
+    </div>`;
+    $("#toast-container").append(toastHtml);
+    $("#toast-container .toast:last").toast('show').on('hidden.bs.toast', function() { $(this).remove(); });
+}
+// Handle form submission via AJAX
+$(document).on('submit', '.modal form', function(e) {
+    e.preventDefault();
+    var $form = $(this);
+    $.post($form.attr('action'), $form.serialize(), function(data) {
+        if (data.success) {
+            showToast('Action completed successfully!', 'success');
+            setTimeout(function(){ location.reload(); }, 1200);
+        } else {
+            $("#modal-container").html(data.html);
+        }
+    });
+});
+function fetchNotifications() {
+    $.get('/api/notifications/', function(data) {
+        var notifCount = data.unread_count;
+        var notifList = data.notifications;
+        if (notifCount > 0) {
+            $('#notifCount').text(notifCount).show();
+        } else {
+            $('#notifCount').hide();
+        }
+        var html = '';
+        if (notifList.length === 0) {
+            html = '<div class="dropdown-item text-muted">No new notifications</div>';
+        } else {
+            notifList.forEach(function(n) {
+                html += '<div class="dropdown-item">' + n.message + '<br><small class="text-muted">' + n.created_at + '</small></div>';
+            });
+        }
+        $('#notifList').html(html);
+    });
+}
+$(document).ready(function() {
+    fetchNotifications();
+    setInterval(fetchNotifications, 15000); // Poll every 15s
+    $('#notifBell').on('click', fetchNotifications);
+    updateSidebarExpandBtn();
+});
+</script>
+<style>
+.light-theme {
+    background: #f8f9fa !important;
+    color: #222 !important;
+}
+.light-theme .sidebar {
+    background: #fff !important;
+    color: #222 !important;
+}
+.light-theme .nav-link { color: #222 !important; }
+.light-theme .nav-link.active { background: #e9ecef !important; color: #007bff !important; }
+.sidebar-mini { width: 70px !important; min-width: 70px !important; }
+.sidebar-mini .nav-link span, .sidebar-mini .nav-link .mr-2, .sidebar-mini h3, .sidebar-mini .font-weight-bold, .sidebar-mini .text-muted, .sidebar-mini .btn-block, .sidebar-mini .btn-link, .sidebar-mini .mb-2, .sidebar-mini .mt-4, .sidebar-mini .pt-4, .sidebar-mini .modal-title { display: none !important; }
+.sidebar-mini .nav-link { text-align: center; padding-left: 0; padding-right: 0; }
+.sidebar-mini .rounded-circle { margin: 0 auto; display: block; }
+#sidebarExpandBtn { display: none; }
+.sidebar-mini ~ #sidebarExpandBtn { display: block !important; }
+</style>
+</body>
+</html> 

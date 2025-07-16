@@ -1,0 +1,132 @@
+{% extends 'tracker/base.html' %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="stat-title">Total</div>
+                <div class="stat-value">{{ status_counts.total }}</div>
+            </div>
+            <div class="stat-icon bg-primary"><i class="fas fa-list"></i></div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="stat-title">Applied</div>
+                <div class="stat-value">{{ status_counts.applied }}</div>
+            </div>
+            <div class="stat-icon" style="background:#6f42c1;"><i class="fas fa-paper-plane"></i></div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="stat-title">Interview</div>
+                <div class="stat-value">{{ status_counts.interview }}</div>
+            </div>
+            <div class="stat-icon" style="background:#fd7e14;"><i class="fas fa-comments"></i></div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="stat-title">Offer</div>
+                <div class="stat-value">{{ status_counts.offer }}</div>
+            </div>
+            <div class="stat-icon" style="background:#28a745;"><i class="fas fa-handshake"></i></div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="stat-title">Accepted</div>
+                <div class="stat-value">{{ status_counts.accepted }}</div>
+            </div>
+            <div class="stat-icon" style="background:#343a40;"><i class="fas fa-check-circle"></i></div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card d-flex justify-content-between align-items-center">
+            <div>
+                <div class="stat-title">Rejected</div>
+                <div class="stat-value">{{ status_counts.rejected }}</div>
+            </div>
+            <div class="stat-icon" style="background:#dc3545;"><i class="fas fa-times-circle"></i></div>
+        </div>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card bg-dark text-white mb-4">
+            <div class="card-header">Applications Per Month (Last 12 Months)</div>
+            <div class="card-body">
+                <canvas id="monthlyBarChart" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-dark text-white mb-4">
+            <div class="card-header">Top Companies</div>
+            <div class="card-body">
+                <table class="table table-sm table-dark mb-0">
+                    <thead><tr><th>Company</th><th>Applications</th></tr></thead>
+                    <tbody>
+                        {% for company, count in top_companies %}
+                        <tr><td>{{ company }}</td><td>{{ count }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="2">No data</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{{ monthly_labels|json_script:"monthly-labels" }}
+{{ monthly_data|json_script:"monthly-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Animated icon waving effect
+function animateWaveIcon(className) {
+    const icons = document.querySelectorAll(className);
+    let duration = 1800;
+    function wave(ts) {
+        let t = (ts % duration) / duration;
+        let scale = 1 + 0.12 * Math.sin(2 * Math.PI * t);
+        icons.forEach(icon => {
+            icon.style.transform = `scale(${scale})`;
+        });
+        requestAnimationFrame(wave);
+    }
+    requestAnimationFrame(wave);
+}
+animateWaveIcon('.stat-icon');
+const monthlyLabels = JSON.parse(document.getElementById('monthly-labels').textContent);
+const monthlyData = JSON.parse(document.getElementById('monthly-data').textContent);
+const ctx = document.getElementById('monthlyBarChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: monthlyLabels,
+        datasets: [{
+            label: 'Applications',
+            data: monthlyData,
+            backgroundColor: '#007bff',
+            borderRadius: 8,
+            barPercentage: 0.7
+        }]
+    },
+    options: {
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { color: '#23283a' }, ticks: { color: '#b0b8c1' } },
+            y: { grid: { color: '#23283a' }, ticks: { color: '#b0b8c1' }, beginAtZero: true }
+        },
+        animation: { duration: 1200, easing: 'easeOutBounce' },
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+</script>
+{% endblock %} 

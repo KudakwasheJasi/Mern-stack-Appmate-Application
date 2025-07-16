@@ -1,0 +1,30 @@
+{% extends 'tracker/base.html' %}
+{% block content %}
+<h2>Reminders</h2>
+<a href="{% url 'reminder_add' %}" class="btn btn-primary mb-3">Add Reminder</a>
+<table class="table table-dark table-hover">
+    <thead>
+        <tr>
+            <th>Job Application</th>
+            <th>Remind At</th>
+            <th>Message</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for reminder in reminders %}
+        <tr>
+            <td>{{ reminder.job_application }}</td>
+            <td>{{ reminder.remind_at }}</td>
+            <td>{{ reminder.message }}</td>
+            <td>
+                <a href="{% url 'reminder_edit' reminder.pk %}" class="btn btn-sm btn-info">Edit</a>
+                <a href="{% url 'reminder_delete' reminder.pk %}" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">No reminders yet.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %} 

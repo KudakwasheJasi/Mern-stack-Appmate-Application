@@ -1,0 +1,113 @@
+{% extends 'tracker/base.html' %}
+{% load widget_tweaks %}
+{% block content %}
+<style>
+    .profile-modal {
+        max-width: 370px;
+        margin: 40px auto;
+        background: #23272b;
+        border-radius: 18px;
+        box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+        padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+    }
+    .profile-avatar {
+        width: 110px;
+        height: 110px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid #007bff;
+        margin-bottom: 1rem;
+    }
+    .profile-initial {
+        width: 150px;
+        height: 110px;
+        border-radius: 50%;
+        background: #007bff;
+        color: #fff;
+        font-size: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    .profile-label {
+        color: #b0b8c1;
+        font-weight: 500;
+        margin-bottom: 0.2rem;
+    }
+    .profile-form .form-control {
+        background: #181c24;
+        color: #fff;
+        border-radius: 8px;
+        border: 1px solid #343a40;
+        margin-bottom: 1.1rem;
+    }
+    .profile-form .form-control:focus {
+        background: #23283a;
+        color: #fff;
+        border-color: #007bff;
+        box-shadow: none;
+    }
+    .profile-form .btn-primary {
+        border-radius: 8px;
+        font-size: 1.1rem;
+        padding: 0.7rem 0;
+        font-weight: 600;
+        background: #007bff;
+        border: none;
+    }
+    .profile-form .btn-primary:hover {
+        background: #0056b3;
+    }
+    .profile-change-pic {
+        color: #1e90ff;
+        font-size: 0.95rem;
+        cursor: pointer;
+        margin-bottom: 1.2rem;
+        display: inline-block;
+    }
+</style>
+<div class="profile-modal">
+    <div class="text-center">
+        {% if profile.profile_pic %}
+            <img src="{{ profile.profile_pic.url }}" class="profile-avatar">
+        {% else %}
+            <div class="profile-initial">
+                {{ user.first_name|default:user.username|first|upper }}
+            </div>
+        {% endif %}
+        <label class="profile-change-pic">
+            Change Picture
+            {{ pform.profile_pic }}
+        </label>
+    </div>
+    <form method="post" enctype="multipart/form-data" class="profile-form mt-3">
+        {% csrf_token %}
+        <div>
+            <div class="profile-label">First Name</div>
+            {{ uform.first_name|add_class:"form-control" }}
+        </div>
+        <div>
+            <div class="profile-label">Title</div>
+            {{ pform.title|add_class:"form-control" }}
+        </div>
+        <div>
+            <div class="profile-label">Email</div>
+            {{ uform.email|add_class:"form-control" }}
+        </div>
+        <div>
+            <div class="profile-label">Role</div>
+            {{ pform.role|add_class:"form-control" }}
+        </div>
+        <div>
+            <div class="profile-label">Phone Number</div>
+            {{ pform.phone_number|add_class:"form-control" }}
+        </div>
+        <div>
+            <div class="profile-label">Bio</div>
+            {{ pform.bio|add_class:"form-control"|attr:"rows:3" }}
+        </div>
+        <button type="submit" class="btn btn-primary btn-block mt-2">Save Changes</button>
+    </form>
+</div>
+{% endblock %} 
